@@ -2,10 +2,75 @@ html
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My GitHub Pages</title>
+  <title>Chatbot Demo</title>
 </head>
 <body>
-  <h1>Hello World!</h1>
-  <p>This is my GitHub Pages site.</p>
+
+  <div id="chatbox"></div>
+
+  <input type="text" id="userInput" />
+  <button id="submitBtn">发送</button>
+
+  <script>
+
+// OpenAI API配置  
+const apiEndpoint = 'http://199.255.97.148:8000/v1/engines/text-davinci/completions';
+const apiKey = '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';
+
+// UI元素
+const chatbox = document.getElementById('chatbox');
+const input = document.getElementById('userInput');
+
+// 当点击发送时调用chatbot函数  
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const userText = input.value;
+  input.value = '';
+
+  chatbot(userText);
+});
+
+// chatbot函数
+async function chatbot(userText) {
+
+  // 构造prompt
+  const prompt = `User: ${userText}\nAssistant:`;
+  
+  try {
+
+    // 发送请求到我们的API服务
+    const response = await fetch(apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt, 
+        max_tokens: 100,
+        model: 'text-davinci-003'
+      })
+      
+    });
+    
+    // 处理响应
+    if (!response.ok) {
+      throw new Error('API request failed'); 
+    }
+
+    const data = await response.json();
+
+    if (data.choices && data.choices.length > 0) {
+      const aiText = data.choices[0].text;
+      chatbox.innerHTML += `Assistant: ${aiText}\n`;
+    }
+
+  } catch (error) {
+    chatbox.innerHTML += `Error: ${error.message}\n`;
+  }
+
+}
+
+  </script>
+
 </body>
 </html>
