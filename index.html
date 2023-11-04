@@ -2,73 +2,62 @@ html
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chatbot Demo</title>
+  <title>OpenAI Web Demo</title>
 </head>
 <body>
 
-  <div id="chatbox"></div>
+  <h1>OpenAI Web Demo</h1>
+  
+  <div id="chatbox">
+    <!-- 对话内容会动态插入这里 -->
+  </div>
 
-  <input type="text" id="userInput" />
-  <button id="submitBtn">发送</button>
+  <div>
+    <textarea id="user-input"></textarea>
+    <button id="submit">Submit</button>
+  </div>
 
   <script>
+    // 获取用户输入
+    const input = document.getElementById('user-input');
+    // 获取提交按钮
+    const submit = document.getElementById('submit');
+    // 获取对话框
+    const chatbox = document.getElementById('chatbox');
 
-// OpenAI API配置  
-const apiEndpoint = 'https://199.255.97.48:8000';
-const apiKey = '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';
+    // OpenAI API 服务地址
+    const apiEndpoint = 'http://199.255.97.148:8000/openai';
 
-// UI元素
-const chatbox = document.getElementById('chatbox');
-const input = document.getElementById('userInput');
+    submit.addEventListener('click', () => {
+      // 用户输入
+      const userText = input.value; 
+      // 构造 Prompt
+      const prompt = `User: ${userText}\nAI:`;
 
-// 当点击发送时调用chatbot函数  
-document.getElementById('submitBtn').addEventListener('click', () => {
-  const userText = input.value;
-  input.value = '';
-
-  chatbot(userText);
-});
-
-// chatbot函数
-async function chatbot(userText) {
-
-  // 构造prompt
-  const prompt = `User: ${userText}\nAssistant:`;
-  
-  try {
-
-    // 发送请求到我们的API服务
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt, 
-        max_tokens: 100,
-        model: 'text-davinci-003'
+      // 调用 OpenAI API
+      fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          model: 'text-davinci-003'  
+        })
       })
-      
+      .then(response => response.json())
+      .then(data => {
+        // 获取 AI 生成回复
+        const aiText = data.choices[0].text;
+        // 在对话框显示对话
+        chatbox.innerHTML += `<div>User: ${userText}</div>`;
+        chatbox.innerHTML += `<div>AI: ${aiText}</div>`;
+      });
+
+      // 清空用户输入
+      input.value = '';
+
     });
-    
-    // 处理响应
-    if (!response.ok) {
-      throw new Error('API request failed'); 
-    }
-
-    const data = await response.json();
-
-    if (data.choices && data.choices.length > 0) {
-      const aiText = data.choices[0].text;
-      chatbox.innerHTML += `Assistant: ${aiText}\n`;
-    }
-
-  } catch (error) {
-    chatbox.innerHTML += `Error: ${error.message}\n`;
-  }
-
-}
 
   </script>
 
